@@ -15,7 +15,6 @@ from gefapi import db, celery
 from gefapi.models import Script, ScriptLog, Execution
 from gefapi.config import SETTINGS
 
-
 REGISTRY_URL = SETTINGS.get('REGISTRY_URL')
 DOCKER_URL = SETTINGS.get('DOCKER_URL')
 
@@ -51,7 +50,7 @@ def docker_build(script_id, path, tag_image):
 
 @celery.task()
 def docker_run(execution_id, image, environment, params):
-    logging.info('[THREAD] Running script with params %s'%(params))
+    logging.info('[THREAD] Running script with params %s' % (params))
     logging.debug('Obtaining execution with id %s' % (execution_id));
     execution = Execution.query.get(execution_id)
     execution.status = 'READY'
@@ -67,6 +66,7 @@ def docker_run(execution_id, image, environment, params):
         execution.status = 'FAILED'
     db.session.add(execution)
     db.session.commit()
+
 
 class DockerService(object):
     """Docker Service"""
@@ -94,7 +94,7 @@ class DockerService(object):
         logging.debug('Pushing image with tag %s' % (tag_image))
         pushed = False
         try:
-            for line in api_client.push(REGISTRY_URL+'/'+tag_image, stream=True, decode=True):
+            for line in api_client.push(REGISTRY_URL + '/' + tag_image, stream=True, decode=True):
                 DockerService.save_build_log(script_id=script_id, line=line)
                 if 'aux' in line and pushed:
                     return True, line['aux']
@@ -113,7 +113,8 @@ class DockerService(object):
             logging.debug('[SERVICE]: Copying dockerfile')
             dockerfile = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'run/Dockerfile')
             copy(dockerfile, os.path.join(path, 'Dockerfile'))
-            for line in api_client.build(path=path, rm=True, decode=True, tag=REGISTRY_URL+'/'+tag_image, forcerm=True, pull=False, nocache=True):
+            for line in api_client.build(path=path, rm=True, decode=True, tag=REGISTRY_URL + '/' + tag_image,
+                                         forcerm=True, pull=False, nocache=True):
                 if 'errorDetail' in line:
                     return False, line['errorDetail']
                 else:
@@ -129,17 +130,30 @@ class DockerService(object):
     @staticmethod
     def run(execution_id, image, environment, params):
         """Run image with environment"""
-        logging.info('Running %s image with params %s' % (image, params))
+        # logging.info('Running %s image with params %s' % (image, params))
         container = None
+
+        environment['GOOGLE_STORAGE_BUCKET'] = 'eldmt'
+
         try:
             environment['ENV'] = 'prod'
             command = './entrypoint.sh ' + params
-            if os.getenv('ENVIRONMENT') != 'dev':
-                env = [k+'='+v for k,v in environment.items()]
-                logging.info(env)
-                container = docker_client.services.create(image=REGISTRY_URL+'/'+image, command=command, env=env, name='execution-'+str(execution_id), restart_policy=docker.types.RestartPolicy(condition='on-failure', delay=10, max_attempts=2, window=0))
-            else:
-                container = docker_client.containers.run(image=REGISTRY_URL+'/'+image, command=params, environment=environment, detach=True, name='execution-'+str(execution_id))
+            # if os.getenv('ENVIRONMENT') != 'dev':
+            env = [k + '=' + v for k, v in environment.items()]
+            logging.info(env)
+            container = docker_client.services.create(image=REGISTRY_URL + '/' + image, command=command, env=env,
+                                                      name='execution-' + str(execution_id),
+                                                      restart_policy=docker.types.RestartPolicy(
+                                                          condition='on-failure', delay=10, max_attempts=2,
+                                                          window=0))
+            # else:
+            #     env = [k + '=' + v for k, v in environment.items()]
+            #
+            #     logging.debug(env)
+            #
+            #     container = docker_client.containers.run(image=REGISTRY_URL + '/' + image, command=params,
+            #                                              environment=env, detach=True,
+            #                                              name='execution-' + str(execution_id))
         except docker.errors.ImageNotFound as error:
             logging.error('Image not found', error)
             return False, error

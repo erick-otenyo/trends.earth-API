@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -33,16 +32,17 @@ def create_script():
     if sent_file.filename == '':
         sent_file.filename = 'script'
     user = current_identity
+
     try:
         user = ScriptService.create_script(sent_file, user)
     except InvalidFile as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=400, detail=e.message)
     except ScriptDuplicated as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=400, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=user.serialize()), 200
 
@@ -57,7 +57,7 @@ def get_scripts():
     try:
         scripts = ScriptService.get_scripts(current_identity)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=[script.serialize(include) for script in scripts]), 200
 
@@ -66,16 +66,16 @@ def get_scripts():
 @jwt_required()
 def get_script(script):
     """Get a script"""
-    logging.info('[ROUTER]: Getting script '+script)
+    logging.info('[ROUTER]: Getting script ' + script)
     include = request.args.get('include')
     include = include.split(',') if include else []
     try:
         script = ScriptService.get_script(script, current_identity)
     except ScriptNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=script.serialize(include)), 200
 
@@ -84,14 +84,14 @@ def get_script(script):
 @jwt_required()
 def publish_script(script):
     """Publish a script"""
-    logging.info('[ROUTER]: Publishsing script '+script)
+    logging.info('[ROUTER]: Publishsing script ' + script)
     try:
         script = ScriptService.publish_script(script, current_identity)
     except ScriptNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=script.serialize()), 200
 
@@ -100,14 +100,14 @@ def publish_script(script):
 @jwt_required()
 def unpublish_script(script):
     """Unpublish a script"""
-    logging.info('[ROUTER]: Unpublishsing script '+script)
+    logging.info('[ROUTER]: Unpublishsing script ' + script)
     try:
         script = ScriptService.unpublish_script(script, current_identity)
     except ScriptNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=script.serialize()), 200
 
@@ -116,18 +116,18 @@ def unpublish_script(script):
 @jwt_required()
 def download_script(script):
     """Download a script"""
-    logging.info('[ROUTER]: Download script '+script)
+    logging.info('[ROUTER]: Download script ' + script)
     try:
         script = ScriptService.get_script(script, current_identity)
         return send_from_directory(directory=SETTINGS.get('SCRIPTS_FS'), filename=script.slug + '.tar.gz')
     except ScriptNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except NotAllowed as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=403, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
 
 
@@ -143,10 +143,10 @@ def get_script_logs(script):
         last_id = request.args.get('last-id', None)
         logs = ScriptService.get_script_logs(script, start, last_id)
     except ScriptNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=[log.serialize() for log in logs]), 200
 
@@ -166,16 +166,16 @@ def update_script(script):
     try:
         script = ScriptService.update_script(script, sent_file, user)
     except InvalidFile as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=400, detail=e.message)
     except ScriptNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except NotAllowed as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=403, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=script.serialize()), 200
 
@@ -184,17 +184,17 @@ def update_script(script):
 @jwt_required()
 def delete_script(script):
     """Delete a script"""
-    logging.info('[ROUTER]: Deleting script: '+script)
+    logging.info('[ROUTER]: Deleting script: ' + script)
     identity = current_identity
     if identity.role != 'ADMIN' and identity.email != 'gef@gef.com':
         return error(status=403, detail='Forbidden')
     try:
         script = ScriptService.delete_script(script, identity)
     except ScriptNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=script.serialize()), 200
 
@@ -204,7 +204,7 @@ def delete_script(script):
 @jwt_required()
 def run_script(script):
     """Run a script"""
-    logging.info('[ROUTER]: Running script: '+script)
+    logging.info('[ROUTER]: Running script: ' + script)
     user = current_identity
     try:
         params = request.args.to_dict() if request.args else {}
@@ -214,13 +214,13 @@ def run_script(script):
             del params['token']
         execution = ExecutionService.create_execution(script, params, user)
     except ScriptNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except ScriptStateNotValid as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=400, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=execution.serialize()), 200
 
@@ -241,7 +241,7 @@ def get_executions():
     try:
         executions = ExecutionService.get_executions(current_identity, user_id, updated_at)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=[execution.serialize(include, exclude) for execution in executions]), 200
 
@@ -250,7 +250,7 @@ def get_executions():
 @jwt_required()
 def get_execution(execution):
     """Get an execution"""
-    logging.info('[ROUTER]: Getting execution: '+execution)
+    logging.info('[ROUTER]: Getting execution: ' + execution)
     include = request.args.get('include')
     include = include.split(',') if include else []
     exclude = request.args.get('exclude')
@@ -258,10 +258,10 @@ def get_execution(execution):
     try:
         execution = ExecutionService.get_execution(execution, current_identity)
     except ExecutionNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=execution.serialize(include, exclude)), 200
 
@@ -271,18 +271,18 @@ def get_execution(execution):
 @validate_execution_update
 def update_execution(execution):
     """Update an execution"""
-    logging.info('[ROUTER]: Updating execution '+execution)
+    logging.info('[ROUTER]: Updating execution ' + execution)
     body = request.get_json()
     user = current_identity
-    if user.role != 'ADMIN' and user.email != 'gef@gef.com':
+    if user.role != 'ADMIN' and user.email != 'rickotiz@gmail.com':
         return error(status=403, detail='Forbidden')
     try:
         execution = ExecutionService.update_execution(body, execution)
     except ExecutionNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=execution.serialize()), 200
 
@@ -298,10 +298,10 @@ def get_execution_logs(execution):
         last_id = request.args.get('last-id', None)
         logs = ExecutionService.get_execution_logs(execution, start, last_id)
     except ExecutionNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=[log.serialize() for log in logs]), 200
 
@@ -313,7 +313,7 @@ def get_download_results(execution):
     try:
         execution = ExecutionService.get_execution(execution)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
 
     return Response(
@@ -328,18 +328,18 @@ def get_download_results(execution):
 @validate_execution_log_creation
 def create_execution_log(execution):
     """Create log of an execution"""
-    logging.info('[ROUTER]: Creating execution log for '+execution)
+    logging.info('[ROUTER]: Creating execution log for ' + execution)
     body = request.get_json()
     user = current_identity
-    if user.role != 'ADMIN' and user.email != 'gef@gef.com':
+    if user.role != 'ADMIN' and user.email != 'rickotiz@gmail.com':
         return error(status=403, detail='Forbidden')
     try:
         log = ExecutionService.create_execution_log(body, execution)
     except ExecutionNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=log.serialize()), 200
 
@@ -355,6 +355,7 @@ def create_user():
         @jwt_required()
         def identity():
             pass
+
         identity()
     identity = current_identity
     if identity:
@@ -366,10 +367,10 @@ def create_user():
     try:
         user = UserService.create_user(body)
     except UserDuplicated as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=400, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=user.serialize()), 200
 
@@ -382,12 +383,12 @@ def get_users():
     include = request.args.get('include')
     include = include.split(',') if include else []
     identity = current_identity
-    if identity.role != 'ADMIN' and identity.email != 'gef@gef.com':
+    if identity.role != 'ADMIN' and identity.email != 'rickotiz@gmail.com':
         return error(status=403, detail='Forbidden')
     try:
         users = UserService.get_users()
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=[user.serialize(include) for user in users]), 200
 
@@ -396,19 +397,19 @@ def get_users():
 @jwt_required()
 def get_user(user):
     """Get an user"""
-    logging.info('[ROUTER]: Getting user'+user)
+    logging.info('[ROUTER]: Getting user' + user)
     include = request.args.get('include')
     include = include.split(',') if include else []
     identity = current_identity
-    if identity.role != 'ADMIN' and identity.email != 'gef@gef.com':
+    if identity.role != 'ADMIN' and identity.email != 'rickotiz@gmail.com':
         return error(status=403, detail='Forbidden')
     try:
         user = UserService.get_user(user)
     except UserNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=user.serialize(include)), 200
 
@@ -445,10 +446,10 @@ def update_profile():
             else:
                 return error(status=400, detail='Not updated')
     except UserNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=user.serialize()), 200
 
@@ -462,10 +463,10 @@ def delete_profile():
     try:
         user = UserService.delete_user(str(identity.id))
     except UserNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=user.serialize()), 200
 
@@ -477,13 +478,13 @@ def recover_password(user):
     try:
         user = UserService.recover_password(user)
     except UserNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except EmailError as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=500, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=user.serialize()), 200
 
@@ -493,18 +494,18 @@ def recover_password(user):
 @validate_user_update
 def update_user(user):
     """Update an user"""
-    logging.info('[ROUTER]: Updating user'+user)
+    logging.info('[ROUTER]: Updating user' + user)
     body = request.get_json()
     identity = current_identity
-    if identity.role != 'ADMIN' and identity.email != 'gef@gef.com':
+    if identity.role != 'ADMIN' and identity.email != 'rickotiz@gmail.com':
         return error(status=403, detail='Forbidden')
     try:
         user = UserService.update_user(body, user)
     except UserNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=user.serialize()), 200
 
@@ -513,18 +514,18 @@ def update_user(user):
 @jwt_required()
 def delete_user(user):
     """Delete an user"""
-    logging.info('[ROUTER]: Deleting user'+user)
+    logging.info('[ROUTER]: Deleting user' + user)
     identity = current_identity
-    if user == 'gef@gef.com':
+    if user == 'rickotiz@gmail.com':
         return error(status=403, detail='Forbidden')
-    if identity.role != 'ADMIN' and identity.email != 'gef@gef.com':
+    if identity.role != 'ADMIN' and identity.email != 'rickotiz@gmail.com':
         return error(status=403, detail='Forbidden')
     try:
         user = UserService.delete_user(user)
     except UserNotFound as e:
-        logging.error('[ROUTER]: '+e.message)
+        logging.error('[ROUTER]: ' + e.message)
         return error(status=404, detail=e.message)
     except Exception as e:
-        logging.error('[ROUTER]: '+str(e))
+        logging.error('[ROUTER]: ' + str(e))
         return error(status=500, detail='Generic Error')
     return jsonify(data=user.serialize()), 200

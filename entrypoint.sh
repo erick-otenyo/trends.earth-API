@@ -4,6 +4,7 @@ set -e
 case "$1" in
     develop)
         echo "Running Development Server"
+        FLASK_APP=main.py flask db upgrade
         exec python main.py
         ;;
     test)

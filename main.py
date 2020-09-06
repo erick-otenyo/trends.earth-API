@@ -1,7 +1,5 @@
-
 import os
 from gefapi import app
-
 
 # This is only used when running locally. When running live, Gunicorn runs
 # the application.
